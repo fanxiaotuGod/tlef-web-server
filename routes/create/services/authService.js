@@ -248,6 +248,50 @@ class AuthService {
   }
 
   /**
+   * Generate both access and refresh tokens for a user
+   * @param {Object} user - User object
+   * @returns {Promise<Object>} - Tokens and user data
+   */
+  static async generateTokens(user) {
+    try {
+      const payload = {
+        userId: user._id,
+        cwlId: user.cwlId,
+        tokenVersion: user.tokenVersion || 0
+      };
+
+      const accessToken = this.generateAccessToken(payload);
+      const refreshToken = this.generateRefreshToken(payload);
+
+      // Store session in Redis
+      await redisUtils.setSession(user._id.toString(), {
+        userId: user._id,
+        cwlId: user.cwlId,
+        createdAt: Date.now()
+      });
+
+      return {
+        success: true,
+        tokens: {
+          accessToken,
+          refreshToken
+        },
+        user: {
+          id: user._id,
+          cwlId: user.cwlId,
+          stats: user.stats
+        }
+      };
+    } catch (error) {
+      console.error('Token generation error:', error);
+      return {
+        success: false,
+        message: 'Token generation failed'
+      };
+    }
+  }
+
+  /**
    * Logout user
    * @param {string} userId - User ID
    * @returns {Promise<Object>} - Logout result

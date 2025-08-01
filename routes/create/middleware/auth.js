@@ -10,8 +10,14 @@ import User from '../models/User.js';
  */
 export const authenticateToken = async (req, res, next) => {
   try {
+    // Check for token in Authorization header or cookies
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    let token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    
+    // If no header token, check cookies
+    if (!token && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
+    }
 
     if (!token) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json({

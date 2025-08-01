@@ -65,7 +65,10 @@ const uploadLimiter = rateLimit({
 });
 
 // Apply rate limiting
-router.use('/auth', authLimiter);
+// Apply auth rate limiting only to login/register endpoints, not logout
+router.use('/auth/login', authLimiter);
+router.use('/auth/register', authLimiter);
+router.use('/auth/saml/login', authLimiter);
 router.use('/materials/upload', uploadLimiter);
 router.use('/', apiLimiter);
 
@@ -90,7 +93,7 @@ router.use('/auth', authController);
 // router.use('/export', exportController);
 
 // 404 handler for unknown API routes
-router.use('*', (req, res) => {
+router.use((req, res) => {
   return errorResponse(
     res,
     `Route ${req.originalUrl} not found`,
